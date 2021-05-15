@@ -1,0 +1,326 @@
+﻿@page
+@{}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Songs</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+.center {
+  margin: auto;
+  width: 60%;
+ 
+}
+
+
+
+
+</style>
+
+</head>
+<body>
+
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <button class="btn btn-outline-dark" data-toggle="modal" data-target="#addSong">+Add New Song to database</button>
+                    </li>
+
+                </ul>
+
+            </div>
+        </nav>
+        <div class="center"> <h4 style="text-align:center">Songs</h4></div>
+
+        <div class="container">
+
+            <table class="table table-striped  table-primary">
+                <thead>
+                    <tr>
+                        <th>Song Title </th>
+                        <th>Band </th>
+                        <th>Album</th>
+
+
+                    </tr>
+                </thead>
+                <tbody id="songs">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+        var uri = 'api/Songs';
+
+        $(document).ready(function () {
+            
+            $.getJSON(uri)
+                .done(function (data) {
+
+                    $("#song").tmpl(data).appendTo("#songs");
+                });
+        });
+
+
+
+        function allSongs() {
+
+               $.getJSON(uri)
+                   .done(function (data) {
+
+                       $("#songs").text("");
+
+                    $("#song").tmpl(data).appendTo("#songs");
+                });
+
+        }
+
+        function addSong() {
+            var _songTitle = $('#songTitle').val();
+            var _band = $('#band').val();
+            var _album = $('#album').val();
+        
+           
+
+
+            var song = {
+                songTitle :  _songTitle,
+                band :_band,
+                album:  _album 
+              
+           
+            };
+
+            $.ajax({
+                type: "POST",
+                url: uri,
+                data: JSON.stringify(song),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#result").html("Added  to database");
+                allSongs();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#result").html("error no record was added to database");
+               });
+
+
+
+
+        }
+
+
+
+
+
+        function updateSong() {
+          var _songTitle = $('#_songTitle').val();
+            var _band = $('#_band').val();
+            var _album = $('#_album').val();
+
+
+            
+            var song = {
+                id : parseInt($('#song_id').val()),
+                songTitle :  _songTitle,
+                band :_band,
+                album:  _album 
+              
+           
+            };
+
+            $.ajax({
+                type: "PUT",
+                url: uri+"/"+ $('#song_id').val(),
+                data: JSON.stringify(song),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#resultUpdate").html("Updated Record");
+                allSongs();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#resultUpdate").html("No record updated ");
+               });;
+
+
+
+
+        }
+
+
+
+        function remove(id) {
+
+
+          var yes =  confirm("Remove this song?");
+
+            if (yes) {
+                $.ajax({
+                    type: "DELETE",
+                    url: uri + "/" + id,
+
+                }).done(function (response) {
+
+                    allSongs();
+                });
+
+            }
+
+
+        }
+
+
+         
+
+
+        function getSong(id) {
+
+             $.ajax({
+                type: "GET",
+                url: uri+"/"+id,
+               contentType: "application/json"
+             }).done(function (response) {
+
+                 $('#song_id').val(response.id);
+                 $('#_songTitle').val(response.songTitle);
+                 $('#_band').val(response.band);
+                 $('#_album').val(response.album);
+                 
+
+              
+
+
+            });
+
+
+        }
+    </script>
+
+    
+
+    <script id="song" type="text/x-jquery-tmpl">
+       
+        <tr>
+
+            <td> ${songTitle}</td>
+            <td>${band}</td>
+            <td>${album}</td>
+          
+
+            <td> <button class="btn btn-outline-primary" onclick="getSong('${id}')" data-toggle="modal" data-target="#updateSong">Update</button></td>
+            <td> <a href="#" class="btn btn-outline-danger" onclick="remove('${id}')">Delete</a></td>
+
+        </tr>
+    </script>
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="addSong">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Song</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="name">Song Title</label>
+                            <input type="text" class="form-control" id="songTitle">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Band</label>
+                            <input type="text" class="form-control" id="band" >
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Album</label>
+                            <input type="text" class="form-control" id="album">
+
+                        </div>
+                      
+                        <div class="form-group" id="result">
+
+
+                        </div>
+                        <button type="button" onclick="addSong()" class="btn btn-primary">Add Song</button>
+                    </form>
+                </div>
+            
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="updateSong">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Song</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+
+                        <div class="form-group">
+
+                            <input type="hidden" class="form-control" id="song_id">
+
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Song Title</label>
+                            <input type="text" class="form-control" id="_songTitle">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Band</label>
+                            <input type="text" class="form-control" id="_band">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Album</label>
+                            <input type="text" class="form-control" id="_album">
+
+                        </div>
+
+
+                        <div class="form-group" id="resultUpdate">
+
+
+                        </div>
+                        <button type="button" onclick="updateSong()" class="btn btn-primary">Update Record</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
